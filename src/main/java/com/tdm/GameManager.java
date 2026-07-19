@@ -22,6 +22,7 @@ public class GameManager {
     private final Map<UUID, Integer> playerAssists = new HashMap<>();
     private final Map<UUID, Integer> playerHeadshots = new HashMap<>();
     private final Map<UUID, Integer> playerPoints = new HashMap<>();
+    private final Map<UUID, Integer> playerDeaths = new HashMap<>();
     // recent headshot: victim -> (damager, timestamp)
     private final Map<UUID, UUID> recentHeadshotBy = new HashMap<>();
     private final Map<UUID, Long> recentHeadshotTime = new HashMap<>();
@@ -167,12 +168,16 @@ public class GameManager {
         playerTeams.put(player.getUniqueId(), team);
         playerKills.put(player.getUniqueId(), 0);
         playerAssists.put(player.getUniqueId(), 0);
+        playerDeaths.put(player.getUniqueId(), 0);
         
         // Update nametag color
         updatePlayerNametagColor(player, team);
         
         player.sendMessage(Component.text("You joined ", NamedTextColor.GRAY)
             .append(Component.text(team.getDisplayName(), team.getColor())));
+        
+        // Fire API event
+        Bukkit.getPluginManager().callEvent(new com.tdm.api.event.TDMPlayerJoinGameEvent(player, team));
         
         ClassSelectionGUI.openClassSelection(player, this);
     }
@@ -262,6 +267,9 @@ public class GameManager {
         startScoreboardUpdater();
         
         Bukkit.broadcast(Component.text("GAME STARTED!", NamedTextColor.GOLD));
+        
+        // Fire API event
+        Bukkit.getPluginManager().callEvent(new com.tdm.api.event.TDMGameStartEvent(currentGameMode));
     }
 
     public void endGame() {
@@ -345,11 +353,16 @@ public class GameManager {
         }
         Bukkit.broadcast(Component.text("=".repeat(40), NamedTextColor.GOLD));
         
+        // Fire API event before clearing data
+        Bukkit.getPluginManager().callEvent(new com.tdm.api.event.TDMGameEndEvent(winner, rankings, teamScores));
+        
         playerTeams.clear();
         playerClasses.clear();
         playerKills.clear();
         playerAssists.clear();
         playerHeadshots.clear();
+        playerPoints.clear();
+        playerDeaths.clear();
         lastDamagerBy.clear();
         lastDamagerTime.clear();
         // reset scoreboards and nametag colors
@@ -370,6 +383,10 @@ public class GameManager {
         
         // Set to spectator mode immediately
         player.setGameMode(org.bukkit.GameMode.SPECTATOR);
+        
+        // Track death
+        playerDeaths.put(player.getUniqueId(), playerDeaths.getOrDefault(player.getUniqueId(), 0) + 1);
+        
         String respawnMsg = plugin.getConfig().getString("messages.respawn-soon", "You are now spectating. Respawning in %time%s...")
                 .replace("%time%", String.valueOf(respawnTime));
         player.sendMessage(Component.text(respawnMsg, NamedTextColor.GRAY));
@@ -479,6 +496,13 @@ public class GameManager {
         } else {
             plugin.getLogger().info("[DEBUG] Assist: No assister found");
         }
+
+        // Fire death event for API consumers
+        Team killerTeamObj = killer != null ? playerTeams.get(killer.getUniqueId()) : null;
+        int victimKills = playerKills.getOrDefault(player.getUniqueId(), 0);
+        int victimDeaths = playerDeaths.getOrDefault(player.getUniqueId(), 0);
+        Bukkit.getPluginManager().callEvent(new com.tdm.api.event.TDMPlayerDeathEvent(
+                player, killer, team, killerTeamObj, victimKills, victimDeaths, cause));
 
         // check any team reached win threshold
         for (int score : teamScores.values()) {
@@ -1140,6 +1164,45 @@ public class GameManager {
 
     public boolean isDeathMessagesEnabled() {
         return enableDeathMessages;
+    }
+
+    // ──────────────────────────────────────────────
+    //  API accessor methods
+    // ──────────────────────────────────────────────
+
+    /** Returns the player's current kill count. */
+    public int getPlayerKills(UUID playerId) {
+        return playerKills.getOrDefault(playerId, 0);
+    }
+
+    /** Returns the player's current assist count. */
+    public int getPlayerAssists(UUID playerId) {
+        return playerAssists.getOrDefault(playerId, 0);
+    }
+
+    /** Returns the player's current death count. */
+    public int getPlayerDeaths(UUID playerId) {
+        return playerDeaths.getOrDefault(playerId, 0);
+    }
+
+    /** Returns an unmodifiable set of all player UUIDs currently in the game. */
+    public Set<UUID> getAllPlayers() {
+        return Collections.unmodifiableSet(playerTeams.keySet());
+    }
+
+    /** Returns the current score for the given team. */
+    public int getTeamScore(Team team) {
+        return teamScores.getOrDefault(team, 0);
+    }
+
+    /** Returns an unmodifiable view of all team scores. */
+    public Map<Team, Integer> getTeamScores() {
+        return Collections.unmodifiableMap(teamScores);
+    }
+
+    /** Returns the number of team score points needed to win. */
+    public int getWinsNeeded() {
+        return winsNeeded;
     }
 
     public void balanceTeams() {

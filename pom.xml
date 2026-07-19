@@ -6,16 +6,11 @@
 
     <groupId>com.tdm</groupId>
     <artifactId>TeamDeathmatch</artifactId>
-
-    <!-- Version now adapts to the GitHub tag -->
-    <version>${revision}</version>
+    <version>1.0.2</version>
 
     <packaging>jar</packaging>
 
     <properties>
-        <!-- Pull version from GitHub tag name -->
-        <revision>${env.GITHUB_REF_NAME}</revision>
-
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -34,6 +29,13 @@
             <artifactId>paper-api</artifactId>
             <version>1.21.1-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.11.0</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

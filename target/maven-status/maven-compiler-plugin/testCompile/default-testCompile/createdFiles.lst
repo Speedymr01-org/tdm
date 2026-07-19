@@ -1,0 +1,6 @@
+com\tdm\api\event\TestStubs.class
+com\tdm\api\event\TDMGameEndEventTest.class
+com\tdm\api\event\TDMPlayerLeaveGameEventTest.class
+com\tdm\api\event\TDMPlayerDeathEventTest.class
+com\tdm\api\event\TDMPlayerJoinGameEventTest.class
+com\tdm\api\event\TDMGameStartEventTest.class

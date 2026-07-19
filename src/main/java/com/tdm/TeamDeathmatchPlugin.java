@@ -1,5 +1,6 @@
 package com.tdm;
 
+import com.tdm.api.TDMAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -33,6 +34,11 @@ public class TeamDeathmatchPlugin extends JavaPlugin {
         getCommand("tdm").setTabCompleter(tdmCommand);
 
         getServer().getPluginManager().registerEvents(new GameListener(gameManager), this);
+
+        // Register unofficial API for other plugins (e.g. tournament)
+        TDMAPI tdmAPI = new TDMAPI(this, gameManager);
+        getServer().getServicesManager().register(TDMAPI.class, tdmAPI, this, org.bukkit.plugin.ServicePriority.Normal);
+        getLogger().info("Registered TDMAPI for external plugins");
 
         getLogger().info("TeamDeathmatch plugin enabled!");
         getLogger().info("Loaded " + PlayerClass.getAllClasses().size() + " classes from config");
