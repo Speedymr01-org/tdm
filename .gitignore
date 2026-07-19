@@ -1,1 +1,10 @@
-sounds to use
+target/
+dependency-reduced-pom.xml
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+*.class
+Thumbs.db
+.DS_Store
