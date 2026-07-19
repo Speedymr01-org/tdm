@@ -9,6 +9,7 @@ public class TeamDeathmatchPlugin extends JavaPlugin {
     private GameManager gameManager;
     private SpawnManager spawnManager;
     private static TeamDeathmatchPlugin instance;
+    private TDMMinigameProvider provider;
 
     @Override
     public void onEnable() {
@@ -40,6 +41,12 @@ public class TeamDeathmatchPlugin extends JavaPlugin {
         getServer().getServicesManager().register(TDMAPI.class, tdmAPI, this, org.bukkit.plugin.ServicePriority.Normal);
         getLogger().info("Registered TDMAPI for external plugins");
 
+        // Register TournamentManager MinigameProvider (if TournamentManager is installed)
+        if (isTournamentManagerInstalled()) {
+            this.provider = new TDMMinigameProvider(this, tdmAPI);
+            this.provider.register();
+        }
+
         getLogger().info("TeamDeathmatch plugin enabled!");
         getLogger().info("Loaded " + PlayerClass.getAllClasses().size() + " classes from config");
         
@@ -50,6 +57,9 @@ public class TeamDeathmatchPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (provider != null) {
+            provider.unregister();
+        }
         if (gameManager != null && gameManager.isGameActive()) {
             getLogger().info("Ending active game due to plugin disable...");
             gameManager.endGame();
@@ -86,6 +96,15 @@ public class TeamDeathmatchPlugin extends JavaPlugin {
                 player.setFoodLevel(20);
                 player.setSaturation(20.0f);
             }
+        }
+    }
+
+    private boolean isTournamentManagerInstalled() {
+        try {
+            Class.forName("com.tdm.tournament.api.MinigameProvider");
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
         }
     }
 

@@ -30,6 +30,14 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- Tournament Manager API (optional) -->
+        <dependency>
+            <groupId>com.tdm</groupId>
+            <artifactId>tournament-manager</artifactId>
+            <version>0.1.0</version>
+            <scope>provided</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
