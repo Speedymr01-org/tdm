@@ -1,4 +1,4 @@
-package com.tdm;
+package com.Speedymr01;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -177,7 +177,7 @@ public class GameManager {
             .append(Component.text(team.getDisplayName(), team.getColor())));
         
         // Fire API event
-        Bukkit.getPluginManager().callEvent(new com.tdm.api.event.TDMPlayerJoinGameEvent(player, team));
+        Bukkit.getPluginManager().callEvent(new com.Speedymr01.api.event.TDMPlayerJoinGameEvent(player, team));
         
         ClassSelectionGUI.openClassSelection(player, this);
     }
@@ -269,7 +269,7 @@ public class GameManager {
         Bukkit.broadcast(Component.text("GAME STARTED!", NamedTextColor.GOLD));
         
         // Fire API event
-        Bukkit.getPluginManager().callEvent(new com.tdm.api.event.TDMGameStartEvent(currentGameMode));
+        Bukkit.getPluginManager().callEvent(new com.Speedymr01.api.event.TDMGameStartEvent(currentGameMode));
     }
 
     public void endGame() {
@@ -354,7 +354,7 @@ public class GameManager {
         Bukkit.broadcast(Component.text("=".repeat(40), NamedTextColor.GOLD));
         
         // Fire API event before clearing data
-        Bukkit.getPluginManager().callEvent(new com.tdm.api.event.TDMGameEndEvent(winner, rankings, teamScores));
+        Bukkit.getPluginManager().callEvent(new com.Speedymr01.api.event.TDMGameEndEvent(winner, rankings, teamScores));
         
         playerTeams.clear();
         playerClasses.clear();
@@ -501,7 +501,7 @@ public class GameManager {
         Team killerTeamObj = killer != null ? playerTeams.get(killer.getUniqueId()) : null;
         int victimKills = playerKills.getOrDefault(player.getUniqueId(), 0);
         int victimDeaths = playerDeaths.getOrDefault(player.getUniqueId(), 0);
-        Bukkit.getPluginManager().callEvent(new com.tdm.api.event.TDMPlayerDeathEvent(
+        Bukkit.getPluginManager().callEvent(new com.Speedymr01.api.event.TDMPlayerDeathEvent(
                 player, killer, team, killerTeamObj, victimKills, victimDeaths, cause));
 
         // check any team reached win threshold

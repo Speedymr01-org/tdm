@@ -1,6 +1,6 @@
-package com.tdm;
+package com.Speedymr01;
 
-import com.tdm.api.TDMAPI;
+import com.Speedymr01.api.TDMAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;

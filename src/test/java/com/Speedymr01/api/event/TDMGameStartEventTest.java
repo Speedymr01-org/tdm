@@ -1,6 +1,6 @@
-package com.tdm.api.event;
+package com.Speedymr01.api.event;
 
-import com.tdm.GameManager.GameMode;
+import com.Speedymr01.GameManager.GameMode;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

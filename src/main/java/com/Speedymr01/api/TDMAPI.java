@@ -1,9 +1,9 @@
-package com.tdm.api;
+package com.Speedymr01.api;
 
-import com.tdm.GameManager;
-import com.tdm.GameManager.Team;
-import com.tdm.GameManager.GameMode;
-import com.tdm.TeamDeathmatchPlugin;
+import com.Speedymr01.GameManager;
+import com.Speedymr01.GameManager.Team;
+import com.Speedymr01.GameManager.GameMode;
+import com.Speedymr01.TeamDeathmatchPlugin;
 import org.bukkit.entity.Player;
 
 import java.util.*;

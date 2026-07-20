@@ -1,4 +1,4 @@
-package com.tdm;
+package com.Speedymr01;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;

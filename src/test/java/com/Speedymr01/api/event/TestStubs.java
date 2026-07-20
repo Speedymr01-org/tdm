@@ -1,4 +1,4 @@
-package com.tdm.api.event;
+package com.Speedymr01.api.event;
 
 import org.bukkit.entity.Player;
 

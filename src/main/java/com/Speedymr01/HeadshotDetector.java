@@ -1,4 +1,4 @@
-package com.tdm;
+package com.Speedymr01;
 
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;

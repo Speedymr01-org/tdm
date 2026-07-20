@@ -3,8 +3,8 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
-    <groupId>com.tdm</groupId>
+    <groupId>com.Speedymr01</groupId>
+    
     <artifactId>TeamDeathmatch</artifactId>
     <version>1.1.0</version>
 
@@ -32,7 +32,7 @@
 
         <!-- Tournament Manager API (optional) -->
         <dependency>
-            <groupId>com.tdm</groupId>
+            <groupId>com.Speedymr01</groupId>
             <artifactId>tournament-manager</artifactId>
             <version>0.1.0</version>
             <scope>provided</scope>

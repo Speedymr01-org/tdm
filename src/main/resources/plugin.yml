@@ -1,6 +1,6 @@
 name: TeamDeathmatch
 version: 1.1.0
-main: com.tdm.TeamDeathmatchPlugin
+main: com.Speedymr01.TeamDeathmatchPlugin
 api-version: '1.21'
 author: YourName
 description: Team Deathmatch plugin supporting 4v4 and 10‑team free‑for‑all modes with admin team toggling

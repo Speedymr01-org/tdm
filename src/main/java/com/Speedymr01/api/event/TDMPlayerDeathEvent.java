@@ -1,6 +1,6 @@
-package com.tdm.api.event;
+package com.Speedymr01.api.event;
 
-import com.tdm.GameManager.Team;
+import com.Speedymr01.GameManager.Team;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;

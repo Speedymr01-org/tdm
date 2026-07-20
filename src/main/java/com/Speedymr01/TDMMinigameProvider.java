@@ -1,7 +1,7 @@
-package com.tdm;
+package com.Speedymr01;
 
-import com.tdm.api.TDMAPI;
-import com.tdm.api.event.TDMGameEndEvent;
+import com.Speedymr01.api.TDMAPI;
+import com.Speedymr01.api.event.TDMGameEndEvent;
 import com.tdm.tournament.api.MatchCompleteEvent;
 import com.tdm.tournament.api.MinigameProvider;
 import org.bukkit.Bukkit;
