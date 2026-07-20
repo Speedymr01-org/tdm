@@ -26,6 +26,9 @@ public class TDMMinigameProvider implements MinigameProvider, Listener {
 
     private final Map<String, MatchContext> activeMatches = new HashMap<>();
 
+    // When true, TDM game end event should be ignored (cleanup from failed createMatch)
+    private volatile boolean endingForCleanup = false;
+
     // TDM team assignment: first tournament team -> RED, second -> BLUE
     private static final GameManager.Team TEAM1_SLOT = GameManager.Team.RED;
     private static final GameManager.Team TEAM2_SLOT = GameManager.Team.BLUE;
@@ -94,66 +97,84 @@ public class TDMMinigameProvider implements MinigameProvider, Listener {
         plugin.verbose("createMatch: after activateGame, isGameActive=" + api.isGameActive()
                 + " isGameStarted=" + api.isGameStarted());
 
-        // Step 3: Join team1 players to RED
-        List<Player> team1Players = new ArrayList<>();
-        for (UUID uid : team1) {
-            Player p = Bukkit.getPlayer(uid);
-            boolean found = (p != null && p.isOnline());
-            plugin.verbose("createMatch: team1 player uid=" + uid + " found=" + found + " name=" + (p != null ? p.getName() : "N/A"));
-            if (found) {
-                boolean joined = api.joinPlayer(p, TEAM1_SLOT);
-                plugin.verbose("createMatch: joinPlayer(team1) returned " + joined);
-                if (joined) {
-                    team1Players.add(p);
-                } else {
-                    // Player couldn't join — check why
-                    plugin.verbose("createMatch: team1 player " + p.getName() + " failed to join (inGame="
-                            + api.isPlayerInGame(uid) + " gameActive=" + api.isGameActive() + " gameStarted=" + api.isGameStarted() + ")");
+        // Track whether we need to end the game on failure (already activated)
+        boolean needCleanup = true;
+
+        try {
+            // Step 3: Join team1 players to RED
+            List<Player> team1Players = new ArrayList<>();
+            for (UUID uid : team1) {
+                Player p = Bukkit.getPlayer(uid);
+                boolean found = (p != null && p.isOnline());
+                plugin.verbose("createMatch: team1 player uid=" + uid + " found=" + found + " name=" + (p != null ? p.getName() : "N/A"));
+                if (found) {
+                    boolean joined = api.joinPlayer(p, TEAM1_SLOT);
+                    plugin.verbose("createMatch: joinPlayer(team1) returned " + joined);
+                    if (joined) {
+                        team1Players.add(p);
+                    } else {
+                        // Player couldn't join — check why
+                        plugin.verbose("createMatch: team1 player " + p.getName() + " failed to join (inGame="
+                                + api.isPlayerInGame(uid) + " gameActive=" + api.isGameActive() + " gameStarted=" + api.isGameStarted() + ")");
+                    }
                 }
             }
-        }
 
-        // Step 4: Join team2 players to BLUE
-        List<Player> team2Players = new ArrayList<>();
-        for (UUID uid : team2) {
-            Player p = Bukkit.getPlayer(uid);
-            boolean found = (p != null && p.isOnline());
-            plugin.verbose("createMatch: team2 player uid=" + uid + " found=" + found + " name=" + (p != null ? p.getName() : "N/A"));
-            if (found) {
-                boolean joined = api.joinPlayer(p, TEAM2_SLOT);
-                plugin.verbose("createMatch: joinPlayer(team2) returned " + joined);
-                if (joined) {
-                    team2Players.add(p);
-                } else {
-                    plugin.verbose("createMatch: team2 player " + p.getName() + " failed to join (inGame="
-                            + api.isPlayerInGame(uid) + " gameActive=" + api.isGameActive() + " gameStarted=" + api.isGameStarted() + ")");
+            // Step 4: Join team2 players to BLUE
+            List<Player> team2Players = new ArrayList<>();
+            for (UUID uid : team2) {
+                Player p = Bukkit.getPlayer(uid);
+                boolean found = (p != null && p.isOnline());
+                plugin.verbose("createMatch: team2 player uid=" + uid + " found=" + found + " name=" + (p != null ? p.getName() : "N/A"));
+                if (found) {
+                    boolean joined = api.joinPlayer(p, TEAM2_SLOT);
+                    plugin.verbose("createMatch: joinPlayer(team2) returned " + joined);
+                    if (joined) {
+                        team2Players.add(p);
+                    } else {
+                        plugin.verbose("createMatch: team2 player " + p.getName() + " failed to join (inGame="
+                                + api.isPlayerInGame(uid) + " gameActive=" + api.isGameActive() + " gameStarted=" + api.isGameStarted() + ")");
+                    }
                 }
             }
+
+            // Step 5: Check if any players actually joined
+            plugin.verbose("createMatch: team1Players.size=" + team1Players.size() + " team2Players.size=" + team2Players.size());
+            if (team1Players.isEmpty() && team2Players.isEmpty()) {
+                plugin.verbose("createMatch: FAILED — both teams empty, no players joined");
+                return false;
+            }
+
+            // Step 6: Store context
+            activeMatches.put(matchId, new MatchContext(arena, team1, team2));
+
+            // Step 7: Start the game
+            plugin.verbose("createMatch: calling api.startGame() (isGameActive=" + api.isGameActive()
+                    + " isGameStarted=" + api.isGameStarted() + ")");
+            boolean started = api.startGame();
+            plugin.verbose("createMatch: api.startGame() returned " + started);
+            if (!started) {
+                plugin.verbose("createMatch: FAILED — api.startGame() returned false");
+                activeMatches.remove(matchId);
+                return false;
+            }
+
+            plugin.verbose("createMatch: SUCCESS — match " + matchId + " started");
+            needCleanup = false;
+            return true;
+        } finally {
+            // If we activated the game but something failed, end it so next attempt can work
+            if (needCleanup) {
+                plugin.verbose("createMatch: cleaning up — ending TDM game after failed match start");
+                endingForCleanup = true;
+                try {
+                    api.endGame();
+                } finally {
+                    endingForCleanup = false;
+                }
+                activeMatches.remove(matchId);
+            }
         }
-
-        // Step 5: Check if any players actually joined
-        plugin.verbose("createMatch: team1Players.size=" + team1Players.size() + " team2Players.size=" + team2Players.size());
-        if (team1Players.isEmpty() && team2Players.isEmpty()) {
-            plugin.verbose("createMatch: FAILED — both teams empty, no players joined");
-            return false;
-        }
-
-        // Step 6: Store context
-        activeMatches.put(matchId, new MatchContext(arena, team1, team2));
-
-        // Step 7: Start the game
-        plugin.verbose("createMatch: calling api.startGame() (isGameActive=" + api.isGameActive()
-                + " isGameStarted=" + api.isGameStarted() + ")");
-        boolean started = api.startGame();
-        plugin.verbose("createMatch: api.startGame() returned " + started);
-        if (!started) {
-            plugin.verbose("createMatch: FAILED — api.startGame() returned false");
-            activeMatches.remove(matchId);
-            return false;
-        }
-
-        plugin.verbose("createMatch: SUCCESS — match " + matchId + " started");
-        return true;
     }
 
     @Override
@@ -168,6 +189,8 @@ public class TDMMinigameProvider implements MinigameProvider, Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onTDMGameEnd(TDMGameEndEvent event) {
+        // Ignore game-end events triggered by cleanup of a failed createMatch
+        if (endingForCleanup) return;
         if (activeMatches.isEmpty()) return;
 
         // Find which match just ended (take the first/only active one)
