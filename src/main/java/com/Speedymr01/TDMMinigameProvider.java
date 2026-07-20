@@ -77,48 +77,82 @@ public class TDMMinigameProvider implements MinigameProvider, Listener {
 
     @Override
     public boolean createMatch(String arena, List<UUID> team1, List<UUID> team2, String matchId) {
-        if (api.isGameActive()) {
+        plugin.verbose("createMatch called: arena=" + arena + " matchId=" + matchId
+                + " team1=" + team1.size() + " players, team2=" + team2.size() + " players");
+
+        // Step 1: Check if game is already active
+        boolean gameActive = api.isGameActive();
+        plugin.verbose("createMatch: api.isGameActive() returned " + gameActive);
+        if (gameActive) {
             plugin.getLogger().warning("TDM game already active, cannot start tournament match " + matchId);
             return false;
         }
 
-        // Activate the game so players can join
+        // Step 2: Activate the game so players can join
+        plugin.verbose("createMatch: calling api.activateGame()");
         api.activateGame();
+        plugin.verbose("createMatch: after activateGame, isGameActive=" + api.isGameActive()
+                + " isGameStarted=" + api.isGameStarted());
 
-        // Join team1 players to RED
+        // Step 3: Join team1 players to RED
         List<Player> team1Players = new ArrayList<>();
         for (UUID uid : team1) {
             Player p = Bukkit.getPlayer(uid);
-            if (p != null && p.isOnline()) {
-                api.joinPlayer(p, TEAM1_SLOT);
-                team1Players.add(p);
+            boolean found = (p != null && p.isOnline());
+            plugin.verbose("createMatch: team1 player uid=" + uid + " found=" + found + " name=" + (p != null ? p.getName() : "N/A"));
+            if (found) {
+                boolean joined = api.joinPlayer(p, TEAM1_SLOT);
+                plugin.verbose("createMatch: joinPlayer(team1) returned " + joined);
+                if (joined) {
+                    team1Players.add(p);
+                } else {
+                    // Player couldn't join — check why
+                    plugin.verbose("createMatch: team1 player " + p.getName() + " failed to join (inGame="
+                            + api.isPlayerInGame(uid) + " gameActive=" + api.isGameActive() + " gameStarted=" + api.isGameStarted() + ")");
+                }
             }
         }
 
-        // Join team2 players to BLUE
+        // Step 4: Join team2 players to BLUE
         List<Player> team2Players = new ArrayList<>();
         for (UUID uid : team2) {
             Player p = Bukkit.getPlayer(uid);
-            if (p != null && p.isOnline()) {
-                api.joinPlayer(p, TEAM2_SLOT);
-                team2Players.add(p);
+            boolean found = (p != null && p.isOnline());
+            plugin.verbose("createMatch: team2 player uid=" + uid + " found=" + found + " name=" + (p != null ? p.getName() : "N/A"));
+            if (found) {
+                boolean joined = api.joinPlayer(p, TEAM2_SLOT);
+                plugin.verbose("createMatch: joinPlayer(team2) returned " + joined);
+                if (joined) {
+                    team2Players.add(p);
+                } else {
+                    plugin.verbose("createMatch: team2 player " + p.getName() + " failed to join (inGame="
+                            + api.isPlayerInGame(uid) + " gameActive=" + api.isGameActive() + " gameStarted=" + api.isGameStarted() + ")");
+                }
             }
         }
 
+        // Step 5: Check if any players actually joined
+        plugin.verbose("createMatch: team1Players.size=" + team1Players.size() + " team2Players.size=" + team2Players.size());
         if (team1Players.isEmpty() && team2Players.isEmpty()) {
+            plugin.verbose("createMatch: FAILED — both teams empty, no players joined");
             return false;
         }
 
-        // Store context
+        // Step 6: Store context
         activeMatches.put(matchId, new MatchContext(arena, team1, team2));
 
-        // Start the game
+        // Step 7: Start the game
+        plugin.verbose("createMatch: calling api.startGame() (isGameActive=" + api.isGameActive()
+                + " isGameStarted=" + api.isGameStarted() + ")");
         boolean started = api.startGame();
+        plugin.verbose("createMatch: api.startGame() returned " + started);
         if (!started) {
+            plugin.verbose("createMatch: FAILED — api.startGame() returned false");
             activeMatches.remove(matchId);
             return false;
         }
 
+        plugin.verbose("createMatch: SUCCESS — match " + matchId + " started");
         return true;
     }
 
