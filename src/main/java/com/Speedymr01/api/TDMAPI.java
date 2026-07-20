@@ -131,6 +131,14 @@ public class TDMAPI {
     // ──────────────────────────────────────────────
 
     /**
+     * Activates the game so players can join.
+     * Must be called before {@link #joinPlayer} and {@link #startGame}.
+     */
+    public void activateGame() {
+        gameManager.activateGame();
+    }
+
+    /**
      * Starts the game if it is active and not yet started.
      * @return true if the game was started, false otherwise.
      */

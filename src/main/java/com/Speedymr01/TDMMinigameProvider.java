@@ -82,6 +82,9 @@ public class TDMMinigameProvider implements MinigameProvider, Listener {
             return false;
         }
 
+        // Activate the game so players can join
+        api.activateGame();
+
         // Join team1 players to RED
         List<Player> team1Players = new ArrayList<>();
         for (UUID uid : team1) {
