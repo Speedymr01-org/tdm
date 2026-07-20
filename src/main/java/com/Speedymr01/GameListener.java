@@ -268,9 +268,14 @@ public class GameListener implements Listener {
         
         if (isPlayerCausedDeath && last instanceof org.bukkit.event.entity.EntityDamageByEntityEvent) {
             org.bukkit.entity.Entity dam = ((org.bukkit.event.entity.EntityDamageByEntityEvent) last).getDamager();
-            // handle direct player damage or indirect via TNT
+            // handle direct player damage, projectiles, or indirect via TNT
             if (dam instanceof Player) {
                 killer = (Player) dam;
+            } else if (dam instanceof Projectile) {
+                Projectile proj = (Projectile) dam;
+                if (proj.getShooter() instanceof Player) {
+                    killer = (Player) proj.getShooter();
+                }
             } else if (dam instanceof TNTPrimed) {
                 TNTPrimed tnt = (TNTPrimed) dam;
                 if (tnt.getSource() instanceof Player) {

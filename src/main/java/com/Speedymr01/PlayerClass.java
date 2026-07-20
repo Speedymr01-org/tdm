@@ -305,8 +305,8 @@ public class PlayerClass {
         
         // Apply health bonus
         if (healthBonus != 0) {
-            double maxHealth = player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue();
-            player.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(maxHealth + healthBonus);
+            double maxHealth = player.getAttribute(Attribute.MAX_HEALTH).getBaseValue();
+            player.getAttribute(Attribute.MAX_HEALTH).setBaseValue(maxHealth + healthBonus);
             player.setHealth(maxHealth + healthBonus);
         }
     }

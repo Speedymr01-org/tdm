@@ -115,7 +115,6 @@ knockback:
 
 # Feature toggles
 features:
-  enable-sounds: true
   enable-class-selection: true
   enable-chat-announcements: true
   enable-titles: true
@@ -131,50 +130,6 @@ mechanics:
   # Fraction of the entity bounding box that is considered the "head" region.
   # Value must be between 0.0 and 1.0. 0.25 means the top 25% is the head.
   head-region-percentage: 0.20
-
-# Sound settings
-sounds:
-  # Enable/disable specific sounds
-  death-sound: true
-  kill-sound: true
-  game-start-sound: true
-  respawn-sound: true
-  assist-sound: true
-  victory-sound: true
-  defeat-sound: true
-  headshot-sound: true
-  
-  # Custom sound names (use Minecraft sound names or custom sounds like "tdm.kill")
-  # For custom sounds, place .ogg files in src/main/resources/assets/tdm/sounds/
-  # Then reference them as "tdm.soundname" (e.g., "tdm.kill" for kill.ogg)
-  kill-sound-name: "ENTITY_PLAYER_LEVELUP"
-  assist-sound-name: "ENTITY_EXPERIENCE_ORB_PICKUP"
-  death-sound-name: "ENTITY_PLAYER_DEATH"
-  respawn-sound-name: "ITEM_TOTEM_USE"
-  game-start-sound-name: "ENTITY_ENDER_DRAGON_GROWL"
-  victory-sound-name: "UI_TOAST_CHALLENGE_COMPLETE"
-  defeat-sound-name: "ENTITY_WITHER_SPAWN"
-  headshot-sound-name: "BLOCK_GLASS_BREAK"
-  
-  # Custom sound volumes (0.0 - 1.0)
-  kill-sound-volume: 1.0
-  assist-sound-volume: 1.0
-  death-sound-volume: 1.0
-  respawn-sound-volume: 0.5
-  game-start-sound-volume: 1.0
-  victory-sound-volume: 1.0
-  defeat-sound-volume: 0.5
-  headshot-sound-volume: 1.0
-  
-  # Custom sound pitches (0.5 - 2.0)
-  kill-sound-pitch: 1.5
-  assist-sound-pitch: 1.2
-  death-sound-pitch: 1.0
-  respawn-sound-pitch: 1.0
-  game-start-sound-pitch: 1.0
-  victory-sound-pitch: 1.0
-  defeat-sound-pitch: 0.8
-  headshot-sound-pitch: 1.8
 
 # Kill streak settings
 kill-streaks:

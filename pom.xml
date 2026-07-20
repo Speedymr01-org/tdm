@@ -6,7 +6,7 @@
     <groupId>com.Speedymr01</groupId>
     
     <artifactId>TeamDeathmatch</artifactId>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
 
     <packaging>jar</packaging>
 
@@ -26,15 +26,15 @@
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
-            <version>1.21.1-R0.1-SNAPSHOT</version>
+            <version>[26.1.2.build,)</version>
             <scope>provided</scope>
         </dependency>
 
         <!-- Tournament Manager API (optional) -->
         <dependency>
-            <groupId>com.Speedymr01</groupId>
+            <groupId>com.tdm</groupId>
             <artifactId>tournament-manager</artifactId>
-            <version>0.1.0</version>
+            <version>0.2.0</version>
             <scope>provided</scope>
         </dependency>
 

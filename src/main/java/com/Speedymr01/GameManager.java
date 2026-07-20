@@ -65,7 +65,6 @@ public class GameManager {
     private int assistPoints;
     private int headshotBonus;
     private boolean showTitle;
-    private boolean enableSounds;
     private boolean enableKillMessages;
     private boolean enableDeathMessages;
     private boolean enableKillStreaks;
@@ -91,7 +90,6 @@ public class GameManager {
         assistPoints = plugin.getConfig().getInt("scoring.assist-points", 5);
         headshotBonus = plugin.getConfig().getInt("scoring.headshot-bonus", 5);
         showTitle = plugin.getConfig().getBoolean("respawn.show-title", true);
-        enableSounds = plugin.getConfig().getBoolean("features.enable-sounds", true);
         enableKillMessages = plugin.getConfig().getBoolean("features.enable-kill-messages", true);
         enableDeathMessages = plugin.getConfig().getBoolean("features.enable-death-messages", true);
         enableKillStreaks = plugin.getConfig().getBoolean("features.enable-kill-streaks", true);
@@ -254,9 +252,6 @@ public class GameManager {
                     player.sendMessage(Component.text("Please select a class to continue!", NamedTextColor.YELLOW));
                 } else {
                     respawnPlayer(player);
-                    if (enableSounds) {
-                        SoundManager.playGameStartSound(player);
-                    }
                 }
             }
         }
@@ -336,20 +331,10 @@ public class GameManager {
             Team team = playerTeams.get(uuid);
             
             if (p != null) {
-                if (team == winner) {
-                    if (enableSounds) {
-                        SoundManager.playVictorySound(p);
-                    }
-                } else {
-                    if (enableSounds) {
-                        SoundManager.playDefeatSound(p);
-                    }
-                }
+                Bukkit.broadcast(Component.text((i + 1) + ". ", NamedTextColor.GOLD)
+                    .append(Component.text(name, team.getColor()))
+                    .append(Component.text(" - " + score + " points", NamedTextColor.GRAY)));
             }
-            
-            Bukkit.broadcast(Component.text((i + 1) + ". ", NamedTextColor.GOLD)
-                .append(Component.text(name, team.getColor()))
-                .append(Component.text(" - " + score + " points", NamedTextColor.GRAY)));
         }
         Bukkit.broadcast(Component.text("=".repeat(40), NamedTextColor.GOLD));
         
@@ -376,10 +361,6 @@ public class GameManager {
         plugin.getLogger().info("[DEBUG] DEATH HANDLER CALLED: player=" + player.getName() + ", killer=" + (killer != null ? killer.getName() : "null") + ", cause=" + cause);
         Team team = playerTeams.get(player.getUniqueId());
         plugin.getLogger().info("[DEBUG] DEATH: victim team=" + team);
-        
-        if (enableSounds) {
-            SoundManager.playDeathSound(player);
-        }
         
         // Set to spectator mode immediately
         player.setGameMode(org.bukkit.GameMode.SPECTATOR);
@@ -434,10 +415,7 @@ public class GameManager {
                     recordHeadshot(killer.getUniqueId());
                     addPoints(killer.getUniqueId(), headshotBonus);
                     killer.sendMessage(Component.text(plugin.getConfig().getString("scoring.headshot-message", "+%points% 💢 HEADSHOT").replace("%points%", String.valueOf(headshotBonus)), NamedTextColor.AQUA));
-                    if (enableSounds) {
-                        SoundManager.playHeadshotSound(killer);
                     }
-                }
 
                 // Clear recent headshot tracking for victim
                 clearRecentHeadshot(player.getUniqueId());
@@ -448,9 +426,6 @@ public class GameManager {
                             .replace("%points%", String.valueOf(killPoints));
                     killer.sendMessage(Component.text(killMsg, NamedTextColor.GREEN));
                     plugin.getLogger().info("[DEBUG] Assist: KILL AWARDED to " + killer.getUniqueId() + " with cause " + cause);
-                    if (enableSounds) {
-                        SoundManager.playKillSound(killer);
-                    }
                 }
             }
         }
@@ -477,9 +452,6 @@ public class GameManager {
                     String assistMsg = plugin.getConfig().getString("scoring.assist-message", "+%points% ⭐ ASSIST")
                             .replace("%points%", String.valueOf(assistPoints));
                     assistPlayer.sendMessage(Component.text(assistMsg, NamedTextColor.YELLOW));
-                    if (enableSounds) {
-                        SoundManager.playAssistSound(assistPlayer);
-                    }
                 }
             } else {
                 plugin.getLogger().info("[DEBUG] Assist: Assister equals killer (" + assister + "), not awarding assist (they get kill instead)");
@@ -678,10 +650,6 @@ public class GameManager {
                 Title.Times.times(Duration.ofMillis(500), Duration.ofMillis(1000), Duration.ofMillis(500))
             ));
         }
-        
-        if (enableSounds) {
-            SoundManager.playRespawnSound(player);
-        }
     }
 
     private Team getSmallestTeam() {
@@ -773,7 +741,7 @@ public class GameManager {
                     String assistsEntry = org.bukkit.ChatColor.YELLOW + "Assists: " + playerAssists.getOrDefault(uuid, 0);
                     obj.getScore(assistsEntry).setScore(line--);
                     
-                    String headshotsEntry = org.bukkit.ChatColor.AQUA + "Headshots: " + playerHeadshots.getOrDefault(uuid, 0);
+                    String headshotsEntry = org.bukkit.ChatColor.AQUA + "Headshot Kills: " + playerHeadshots.getOrDefault(uuid, 0);
                     obj.getScore(headshotsEntry).setScore(line--);
 
                     player.setScoreboard(board);
@@ -812,9 +780,6 @@ public class GameManager {
                     if (playerClasses.containsKey(uuid)) {
                         playersNeedingClassSelection.remove(uuid);
                         GameManager.this.respawnPlayer(player);
-                        if (enableSounds) {
-                            SoundManager.playGameStartSound(player);
-                        }
                     } else {
                         // Check if player's inventory is closed (not the class selection GUI)
                         String invTitle = net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText().serialize(player.getOpenInventory().title());
