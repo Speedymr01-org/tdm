@@ -22,6 +22,16 @@ jobs:
           distribution: temurin
           java-version: 25
 
+      - name: Checkout tournament-manager dependency
+        uses: actions/checkout@v6
+        with:
+          repository: Speedymr01/tournament-manager
+          path: tournament-manager
+
+      - name: Install tournament-manager to local Maven repo
+        run: mvn install -DskipTests -q
+        working-directory: tournament-manager
+
       - name: Build project
         run: pwsh ./build.ps1
 
