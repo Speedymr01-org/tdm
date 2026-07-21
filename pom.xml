@@ -34,7 +34,7 @@
         <dependency>
             <groupId>com.tdm</groupId>
             <artifactId>tournament-manager</artifactId>
-            <version>0.2.0</version>
+            <version>0.3.0</version>
             <scope>provided</scope>
         </dependency>
 
