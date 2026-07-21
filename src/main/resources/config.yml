@@ -2,7 +2,7 @@
 
 # Game settings
 game:
-  # Number of kills needed to win a game
+  # Kills needed for a team to win (score target)
   wins-needed: 30
   
   # Respawn countdown time in seconds
@@ -65,8 +65,6 @@ respawn:
   title-duration: 1000
   # Invulnerability time after respawn in seconds
   invulnerability-time: 0
-  # Heal players on respawn
-  heal-on-respawn: true
   # Reset hunger on respawn
   reset-hunger-on-respawn: true
 

@@ -68,11 +68,21 @@ public class GameManager {
     private boolean enableKillMessages;
     private boolean enableDeathMessages;
     private boolean enableKillStreaks;
-    private boolean healOnRespawn;
     private boolean resetHungerOnRespawn;
     private int autoStartDelay;
     private boolean autoBalanceTeams;
     private int maxTeamDifference;
+
+    // Damage multipliers
+    private double globalDamageMultiplier;
+    private double fallDamageMultiplier;
+    private double fireDamageMultiplier;
+    private double projectileDamageMultiplier;
+    private double meleeDamageMultiplier;
+
+    // Knockback multipliers
+    private double knockbackMultiplier;
+    private double knockbackPerDamage;
 
     public GameManager(TeamDeathmatchPlugin plugin, SpawnManager spawnManager) {
         this.plugin = plugin;
@@ -80,7 +90,7 @@ public class GameManager {
         loadConfigSettings();
     }
     
-    private void loadConfigSettings() {
+    public void loadConfigSettings() {
         winsNeeded = plugin.getConfig().getInt("game.wins-needed", 3);
         respawnTime = plugin.getConfig().getInt("game.respawn-time", 5);
         autoStartDelay = plugin.getConfig().getInt("game.auto-start-delay", 0);
@@ -93,8 +103,18 @@ public class GameManager {
         enableKillMessages = plugin.getConfig().getBoolean("features.enable-kill-messages", true);
         enableDeathMessages = plugin.getConfig().getBoolean("features.enable-death-messages", true);
         enableKillStreaks = plugin.getConfig().getBoolean("features.enable-kill-streaks", true);
-        healOnRespawn = plugin.getConfig().getBoolean("respawn.heal-on-respawn", true);
         resetHungerOnRespawn = plugin.getConfig().getBoolean("respawn.reset-hunger-on-respawn", true);
+
+        // Damage multipliers (config stores as percentage: 100 = 100%, 50 = 50%, etc.)
+        globalDamageMultiplier = getConfigPercent("damage.global-damage-multiplier", 100) / 100.0;
+        fallDamageMultiplier = getConfigPercent("damage.fall-damage-multiplier", 100) / 100.0;
+        fireDamageMultiplier = getConfigPercent("damage.fire-damage-multiplier", 100) / 100.0;
+        projectileDamageMultiplier = getConfigPercent("damage.projectile-damage-multiplier", 100) / 100.0;
+        meleeDamageMultiplier = getConfigPercent("damage.melee-damage-multiplier", 100) / 100.0;
+
+        // Knockback multipliers
+        knockbackMultiplier = plugin.getConfig().getDouble("knockback.knockback-multiplier", 1.0);
+        knockbackPerDamage = plugin.getConfig().getDouble("knockback.knockback-per-damage", 1.0);
         
         // load enabled FFA teams (default red + blue)
         enabledFfaTeams.clear();
@@ -629,9 +649,8 @@ public class GameManager {
         }
         
         player.teleport(spawn);
-        if (healOnRespawn) {
-            player.setHealth(20);
-        }
+        // Always heal on respawn
+        player.setHealth(20);
         if (resetHungerOnRespawn) {
             player.setFoodLevel(20);
         }
@@ -1168,6 +1187,25 @@ public class GameManager {
     /** Returns the number of team score points needed to win. */
     public int getWinsNeeded() {
         return winsNeeded;
+    }
+
+    // Damage multiplier getters
+    public double getGlobalDamageMultiplier() { return globalDamageMultiplier; }
+    public double getFallDamageMultiplier() { return fallDamageMultiplier; }
+    public double getFireDamageMultiplier() { return fireDamageMultiplier; }
+    public double getProjectileDamageMultiplier() { return projectileDamageMultiplier; }
+    public double getMeleeDamageMultiplier() { return meleeDamageMultiplier; }
+
+    // Knockback multiplier getters
+    public double getKnockbackMultiplier() { return knockbackMultiplier; }
+    public double getKnockbackPerDamage() { return knockbackPerDamage; }
+
+    private int getConfigPercent(String path, int defaultVal) {
+        Object val = plugin.getConfig().get(path, defaultVal);
+        if (val instanceof Number) {
+            return ((Number) val).intValue();
+        }
+        return defaultVal;
     }
 
     public void balanceTeams() {

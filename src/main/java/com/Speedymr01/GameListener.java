@@ -301,15 +301,17 @@ public class GameListener implements Listener {
     public void onEntityDamage(EntityDamageByEntityEvent event) {
         if (!gameManager.isGameStarted()) return;
         if (!(event.getEntity() instanceof Player)) return;
-        
+
         Player victim = (Player) event.getEntity();
         Player damager = null;
         boolean isRanged = false;
-        
+        boolean isMelee = false;
+
         // Detect if damager is player, projectile, or primed TNT
         if (event.getDamager() instanceof Player) {
             damager = (Player) event.getDamager();
             isRanged = false;
+            isMelee = true;
         } else if (event.getDamager() instanceof Projectile) {
             Projectile projectile = (Projectile) event.getDamager();
             if (projectile.getShooter() instanceof Player) {
@@ -322,12 +324,12 @@ public class GameListener implements Listener {
                 damager = (Player) tnt.getSource();
             }
         }
-        
+
         if (damager != null) {
             // Check teams and friendly fire
             GameManager.Team victimTeam = gameManager.getPlayerTeam(victim.getUniqueId());
             GameManager.Team damagerTeam = gameManager.getPlayerTeam(damager.getUniqueId());
-            
+
             if (victimTeam == damagerTeam) {
                 // If friendly fire is disabled, cancel team damage
                 if (!gameManager.getPlugin().getConfig().getBoolean("rules.friendly-fire", false)) {
@@ -335,7 +337,28 @@ public class GameListener implements Listener {
                     return;
                 }
             }
-            
+
+            // Apply damage multipliers based on damage cause
+            double multiplier = gameManager.getGlobalDamageMultiplier();
+            org.bukkit.event.entity.EntityDamageEvent.DamageCause cause = event.getCause();
+
+            if (cause == org.bukkit.event.entity.EntityDamageEvent.DamageCause.FALL) {
+                multiplier *= gameManager.getFallDamageMultiplier();
+            } else if (cause == org.bukkit.event.entity.EntityDamageEvent.DamageCause.FIRE
+                    || cause == org.bukkit.event.entity.EntityDamageEvent.DamageCause.FIRE_TICK
+                    || cause == org.bukkit.event.entity.EntityDamageEvent.DamageCause.LAVA) {
+                multiplier *= gameManager.getFireDamageMultiplier();
+            } else if (isRanged) {
+                multiplier *= gameManager.getProjectileDamageMultiplier();
+            } else if (isMelee) {
+                multiplier *= gameManager.getMeleeDamageMultiplier();
+            }
+
+            // Apply the final damage multiplier
+            if (multiplier != 1.0) {
+                event.setDamage(event.getDamage() * multiplier);
+            }
+
             // Check for headshot based on damage type
             boolean isHeadshot = false;
 
@@ -353,12 +376,12 @@ public class GameListener implements Listener {
                 // For melee attacks, use raycast detection
                 isHeadshot = HeadshotDetector.isMeleeHeadshot(damager, victim, headFraction);
             }
-            
+
             // Only mark headshot if this damage will kill the player (killing blow)
             if (isHeadshot) {
                 double damageAmount = event.getFinalDamage();
                 double victimHealth = victim.getHealth();
-                
+
                 // Check if this hit will kill the player
                 if (damageAmount >= victimHealth) {
                     // This is a killing blow headshot - mark it
@@ -366,7 +389,7 @@ public class GameListener implements Listener {
                 }
                 // Note: Headshot counter, points, message, and sound are awarded when the kill happens in GameManager
             }
-            
+
             gameManager.recordDamage(victim.getUniqueId(), damager.getUniqueId());
         }
     }
