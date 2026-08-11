@@ -22,11 +22,39 @@ jobs:
           distribution: temurin
           java-version: 25
 
+      - name: Read tournament-manager version from pom.xml
+        id: tm-version
+        shell: bash
+        run: |
+          # Extract version from the tournament-manager <dependency> block in pom.xml
+          version=$(grep -A2 '<artifactId>tournament-manager</artifactId>' pom.xml | grep -m1 -oP '(?<=<version>)[^<]+')
+          if [ -z "$version" ]; then
+            echo "::error::Could not find tournament-manager version in pom.xml"
+            exit 1
+          fi
+          echo "Resolved tournament-manager version: $version"
+          echo "version=$version" >> $GITHUB_OUTPUT
+
       - name: Checkout tournament-manager dependency
         uses: actions/checkout@v6
         with:
           repository: Speedymr01/tournament-manager
           path: tournament-manager
+          ref: v${{ steps.tm-version.outputs.version }}
+          fetch-depth: 1
+
+      - name: Verify checked-out tag matches pom.xml version
+        shell: bash
+        working-directory: tournament-manager
+        run: |
+          expected="v${{ steps.tm-version.outputs.version }}"
+          actual=$(git describe --tags --exact-match HEAD 2>/dev/null || echo "")
+          if [ "$actual" != "$expected" ]; then
+            echo "::error::tournament-manager version mismatch: pom.xml says $expected but checked out commit is '$actual'"
+            echo "::error::Make sure tournament-manager has a tag named '$expected' before releasing this plugin."
+            exit 1
+          fi
+          echo "Verified tournament-manager is at $actual"
 
       - name: Install tournament-manager to local Maven repo
         run: mvn install -DskipTests -q
@@ -39,7 +67,8 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: plugin
-          path: target/*.jar
+          path: target/TeamDeathmatch-*.jar
+          if-no-files-found: error
 
   publish-modrinth:
     runs-on: ubuntu-latest
@@ -59,8 +88,14 @@ jobs:
         shell: bash
         run: |
           cd plugin
-          echo "jar=$(ls *.jar | head -1)" >> $GITHUB_OUTPUT
-      
+          # build.ps1 ensures only the renamed final JAR exists; match it precisely.
+          jar=$(ls TeamDeathmatch-*.jar | head -1)
+          if [ -z "$jar" ]; then
+            echo "::error::No JAR found matching TeamDeathmatch-*.jar in plugin/"
+            exit 1
+          fi
+          echo "jar=$jar" >> $GITHUB_OUTPUT
+
       - name: Upload to Modrinth
         uses: RubixDev/modrinth-upload@v1
         with:
@@ -94,7 +129,13 @@ jobs:
         shell: bash
         run: |
           cd plugin
-          echo "jar=$(ls *.jar | head -1)" >> $GITHUB_OUTPUT
+          # build.ps1 ensures only the renamed final JAR exists; match it precisely.
+          jar=$(ls TeamDeathmatch-*.jar | head -1)
+          if [ -z "$jar" ]; then
+            echo "::error::No JAR found matching TeamDeathmatch-*.jar in plugin/"
+            exit 1
+          fi
+          echo "jar=$jar" >> $GITHUB_OUTPUT
 
       - name: Delete existing release (if any)
         run: |

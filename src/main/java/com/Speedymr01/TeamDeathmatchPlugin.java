@@ -3,6 +3,7 @@ package com.Speedymr01;
 import com.Speedymr01.api.TDMAPI;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -81,6 +82,10 @@ public class TeamDeathmatchPlugin extends JavaPlugin {
 
         // Register GUI click listener
         getServer().getPluginManager().registerEvents(guiListener, this);
+
+        // bStats
+        int pluginId = 33301;
+        new Metrics(this, pluginId);
 
         // Detect if this is a reload
         boolean isReload = gameManager != null;
