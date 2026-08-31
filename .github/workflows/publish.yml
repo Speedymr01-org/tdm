@@ -38,7 +38,7 @@ jobs:
       - name: Checkout tournament-manager dependency
         uses: actions/checkout@v6
         with:
-          repository: Speedymr01/tournament-manager
+          repository: Speedymr01-org/tournament-manager
           path: tournament-manager
           ref: v${{ steps.tm-version.outputs.version }}
           fetch-depth: 1
