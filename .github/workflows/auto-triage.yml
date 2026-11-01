@@ -103,7 +103,11 @@ jobs:
             let issue = context.payload.issue;
             let issueNumber = issue ? issue.number : undefined;
             if (!issue) {
-              const requested = Number(core.getInput('issue_number'));
+              // workflow_dispatch inputs live in the payload, not in INPUT_* env vars
+              const requested = Number(
+                (context.payload.inputs && context.payload.inputs.issue_number) ||
+                core.getInput('issue_number')
+              );
               if (!requested) {
                 throw new Error('No issue payload and no issue_number input provided');
               }
