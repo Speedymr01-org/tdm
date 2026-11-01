@@ -14,6 +14,8 @@ on:
 permissions:
   issues: write
   contents: read
+  # actions/cache needs this to save the model weights
+  actions: write
 
 # The model is pulled and run locally on the runner (no cloud API, no API key).
 # gpt-oss:120b (65GB) cannot run on a stock runner (16GB RAM / ~14GB disk), so this
@@ -97,7 +99,23 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const issue = context.payload.issue;
+            // issue-opened supplies the issue payload; workflow_dispatch only supplies a number
+            let issue = context.payload.issue;
+            let issueNumber = issue ? issue.number : undefined;
+            if (!issue) {
+              const requested = Number(core.getInput('issue_number'));
+              if (!requested) {
+                throw new Error('No issue payload and no issue_number input provided');
+              }
+              issueNumber = requested;
+              const fetched = await github.rest.issues.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber
+              });
+              issue = fetched.data;
+            }
+            
             const labels = issue.labels.map(l => l.name);
             const isVersionUpdate = labels.includes('Version Update');
             
@@ -212,7 +230,7 @@ jobs:
                   await github.rest.issues.createComment({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
-                    issue_number: context.issue.number,
+                    issue_number: issueNumber,
                     body: '**AI Triage:** ' + result.explanation
                   });
                 }
@@ -278,7 +296,7 @@ jobs:
               await github.rest.issues.addLabels({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: context.issue.number,
+                issue_number: issueNumber,
                 labels: [typeLabel]
               });
               console.log('Added label: ' + typeLabel);
@@ -307,7 +325,7 @@ jobs:
               await github.request('POST /repos/{owner}/{repo}/issues/{issue_number}/issue-field-values', {
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: context.issue.number,
+                issue_number: issueNumber,
                 issue_field_values: fieldValues
               });
               
